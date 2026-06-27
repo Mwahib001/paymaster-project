@@ -147,11 +147,13 @@ export const submitUserOperation: RequestHandler = async (req, res, next) => {
       },
     ] as const;
 
+    // Explicit gas to avoid Hardhat/EDR gas cap issues (cap ~16.7M)
     const txHash = await walletClient.writeContract({
       address: env.ENTRYPOINT_ADDRESS,
       abi: entryPointAbi,
       functionName: 'handleOps',
       args: [[normalizedUserOp], beneficiaryAddress],
+      gas: 8_000_000n,
     });
 
     const response: SubmitResponse = {

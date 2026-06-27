@@ -10,6 +10,9 @@ export default buildModule("VerifyingPaymasterModule", (m) => {
   // Use the wrapper so Hardhat can find the artifact
   const entryPoint = m.contract("RealEntryPoint", []);
 
+  // Deploy SimpleAccountFactory so users can create their ERC-4337 accounts
+  const accountFactory = m.contract("RealSimpleAccountFactory", [entryPoint]);
+
   const verifyingPaymaster = m.contract("VerifyingPaymaster", [
     entryPoint,
     verifyingSignerAddress,
@@ -20,5 +23,5 @@ export default buildModule("VerifyingPaymasterModule", (m) => {
     value: INITIAL_DEPOSIT,
   });
 
-  return { entryPoint, verifyingPaymaster };
+  return { entryPoint, accountFactory, verifyingPaymaster };
 });
