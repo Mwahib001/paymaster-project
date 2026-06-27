@@ -1,15 +1,17 @@
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 
-const CANONICAL_ENTRY_POINT = "0x0000000071727De22E5E9d8BAf0edAc6f37da032";
-const INITIAL_DEPOSIT = 100000000000000000n;
+const INITIAL_DEPOSIT = 100000000000000000n; // 0.1 ETH
+const HARDHAT_DEFAULT_ACCOUNT = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
 
 export default buildModule("VerifyingPaymasterModule", (m) => {
-  const entryPointAddress = m.getParameter("entryPointAddress", CANONICAL_ENTRY_POINT);
-  const verifyingSignerAddress = m.getParameter("verifyingSignerAddress");
-  const ownerAddress = m.getParameter("ownerAddress");
+  const verifyingSignerAddress = m.getParameter("verifyingSignerAddress", HARDHAT_DEFAULT_ACCOUNT);
+  const ownerAddress = m.getParameter("ownerAddress", HARDHAT_DEFAULT_ACCOUNT);
+
+  // Use the wrapper so Hardhat can find the artifact
+  const entryPoint = m.contract("RealEntryPoint", []);
 
   const verifyingPaymaster = m.contract("VerifyingPaymaster", [
-    entryPointAddress,
+    entryPoint,
     verifyingSignerAddress,
     ownerAddress,
   ]);
@@ -18,5 +20,5 @@ export default buildModule("VerifyingPaymasterModule", (m) => {
     value: INITIAL_DEPOSIT,
   });
 
-  return { verifyingPaymaster };
+  return { entryPoint, verifyingPaymaster };
 });

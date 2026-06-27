@@ -84,12 +84,15 @@ contract VerifyingPaymaster is BasePaymaster {
     bytes32 userOpHash,
     uint256 maxCost
   ) internal override returns (bytes memory context, uint256 validationData) {
-    if (userOp.paymasterAndData.length < 52) {
+    // Support standard v0.7 paymasterAndData layout:
+    // [0:20] pm | [20:52] pmVerificationGas+pmPostOpGas (32B) | [52:58] validUntil | [58:64] validAfter | [64:] sig
+    // Our sponsor data starts after the 32B pm gas fields.
+    if (userOp.paymasterAndData.length < 64 + 65) {
       revert InvalidSignature();
     }
 
-    uint48 validUntil = uint48(bytes6(userOp.paymasterAndData[20:26]));
-    uint48 validAfter = uint48(bytes6(userOp.paymasterAndData[26:32]));
+    uint48 validUntil = uint48(bytes6(userOp.paymasterAndData[52:58]));
+    uint48 validAfter = uint48(bytes6(userOp.paymasterAndData[58:64]));
 
     if (validAfter >= validUntil) {
       revert InvalidTimeRange();
@@ -107,8 +110,23 @@ contract VerifyingPaymaster is BasePaymaster {
       return ("", _packValidationData(true, validUntil, validAfter));
     }
 
-    bytes calldata signature = userOp.paymasterAndData[32:];
-    bytes32 signedHash = keccak256(abi.encode(userOpHash, address(this), validUntil, validAfter, block.chainid));
+    bytes calldata signature = userOp.paymasterAndData[64:];
+
+    // Sponsorship digest is built from stable UserOp intent fields + window + chain.
+    // This is independent of paymasterAndData (the signature lives inside it).
+    // Full userOpHash (from EntryPoint) is used only for replay protection and events.
+    bytes32 intentHash = keccak256(abi.encode(
+      userOp.sender,
+      userOp.nonce,
+      keccak256(userOp.callData),
+      userOp.accountGasLimits,
+      userOp.preVerificationGas,
+      userOp.gasFees,
+      validUntil,
+      validAfter,
+      block.chainid
+    ));
+    bytes32 signedHash = keccak256(abi.encode(intentHash, address(this)));
     bytes32 ethSignedHash = MessageHashUtils.toEthSignedMessageHash(signedHash);
     address recoveredSigner = ECDSA.recover(ethSignedHash, signature);
 

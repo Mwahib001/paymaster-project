@@ -44,6 +44,7 @@ export type SignResponse = {
   validUntil: number;
   validAfter: number;
   signer: Address;
+  userOpHash: Hex; // Hash of the UserOp with paymasterAndData filled (for account signature)
 };
 
 export type StatusResponse = {
@@ -51,4 +52,9 @@ export type StatusResponse = {
   chainId: number;
   paymasterAddress: Address;
   healthy: boolean;
+};
+
+export type SubmitResponse = {
+  userOpHash: Hex;
+  success: boolean;
 };

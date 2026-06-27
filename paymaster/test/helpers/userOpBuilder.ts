@@ -1,4 +1,4 @@
-import type { Address, Hex } from "viem";
+import { concatHex, pad, toHex, type Address, type Hex } from "viem";
 
 export type PackedUserOperation = {
   sender: Address;
@@ -34,3 +34,15 @@ export function buildUserOp(
     ...overrides,
   };
 }
+
+export const DUMMY_PAYMASTER_SIGNATURE: Hex = `0x${"00".repeat(65)}`;
+
+export function packUint128Pair(left: bigint, right: bigint): Hex {
+  return concatHex([
+    pad(toHex(left), { size: 16 }),
+    pad(toHex(right), { size: 16 }),
+  ]);
+}
+
+export const SIG_VALIDATION_SUCCESS = 0n;
+export const SIG_VALIDATION_FAILED = 1n;

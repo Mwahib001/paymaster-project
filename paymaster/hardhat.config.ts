@@ -7,6 +7,12 @@ export default defineConfig({
     profiles: {
       default: {
         version: "0.8.28",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
       },
       production: {
         version: "0.8.28",
@@ -23,6 +29,8 @@ export default defineConfig({
     hardhatMainnet: {
       type: "edr-simulated",
       chainType: "l1",
+      // Allow large contracts like EntryPoint (~29kB) in local tests
+      allowUnlimitedContractSize: true,
     },
     hardhatOp: {
       type: "edr-simulated",
