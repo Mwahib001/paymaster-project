@@ -51,6 +51,7 @@ export type StatusResponse = {
   signer: Address;
   chainId: number;
   paymasterAddress: Address;
+  entryPointAddress: Address;
   healthy: boolean;
 };
 

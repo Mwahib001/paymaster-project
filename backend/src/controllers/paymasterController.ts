@@ -87,6 +87,7 @@ export const getPaymasterStatus: RequestHandler = (_req, res) => {
       signer: signerAddress,
       chainId: env.CHAIN_ID,
       paymasterAddress: env.PAYMASTER_ADDRESS,
+      entryPointAddress: env.ENTRYPOINT_ADDRESS,
       healthy: true
     };
 
@@ -96,6 +97,7 @@ export const getPaymasterStatus: RequestHandler = (_req, res) => {
       signer: signerAddress,
       chainId: env.CHAIN_ID,
       paymasterAddress: env.PAYMASTER_ADDRESS,
+      entryPointAddress: env.ENTRYPOINT_ADDRESS,
       healthy: false
     } satisfies StatusResponse);
   }
@@ -166,5 +168,21 @@ export const submitUserOperation: RequestHandler = async (req, res, next) => {
   } catch (error) {
     const message = error instanceof Error ? error.message : 'submit failed';
     next(new AppError(500, ErrorCode.InternalError, `submit failed: ${message}`, req.requestId));
+  }
+};
+
+export const computeUserOpHash: RequestHandler = async (req, res, next) => {
+  try {
+    const { userOp } = req.body as { userOp: any };
+    const normalizedUserOp = {
+      ...userOp,
+      nonce: BigInt(userOp.nonce),
+      preVerificationGas: BigInt(userOp.preVerificationGas),
+    };
+    const userOpHash = getUserOpHash(normalizedUserOp, env.CHAIN_ID);
+    res.status(200).json({ userOpHash });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'failed to compute hash';
+    next(new AppError(500, ErrorCode.InternalError, `failed to compute hash: ${message}`, req.requestId));
   }
 };
